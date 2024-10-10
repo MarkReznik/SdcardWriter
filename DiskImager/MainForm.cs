@@ -24,7 +24,7 @@ namespace DynamicDevices.DiskWriter
         #endregion
 
         DispatcherTimer dispatcherTimer = null;
-        bool sdcard_status=false;
+        bool sdcardStatus=false;
 
         #region Constructor
 
@@ -417,11 +417,18 @@ namespace DynamicDevices.DiskWriter
         private void DisplayAllDrivesToolStripMenuItemCheckedChanged(object sender, EventArgs e)
         {
             PopulateDrives();
-            if (comboBoxDrives.Items.Count > 0)
-                EnableButtons();
-            else
-                DisableButtons(false);
-        }
+            if (comboBoxDrives.Items.Count > 0){
+                if (checkBoxLock.Checked == false)
+                {
+                    if (buttonWrite.Enabled)
+                    {
+                        EnableButtons();
+                    }
+                }                
+            }
+                else
+                    DisableButtons(false);
+            }
 
         /// <summary>
         /// Load in the drives
@@ -448,19 +455,24 @@ namespace DynamicDevices.DiskWriter
                 }
 
             }
-
-            if (list_drivenames.Count == 0){
+            //list of removable drives is empty
+            if (list_drivenames.Count == 0)
+            {
                 comboBoxDrives.SelectedIndex = -1;
                 comboBoxDrives.Items.Clear();
 
-                if (dispatcherTimer.IsEnabled == false){
+                if (dispatcherTimer.IsEnabled == false)
+                {
                     dispatcherTimer.Start();
                 }
-                if (checkBoxLock.Checked == false) { 
-                    checkBoxLock.Enabled = false;
+                if (checkBoxLock.Checked == false)
+                {
+                    //checkBoxLock.Enabled = false;
                 }
             }
-            else if (checkBoxLock.Checked == false){
+            //list of removable drives is not empty and checkbox unchecked
+            else if (checkBoxLock.Checked == false)
+            {
                 //Update combobox if different count and not check lock
                 if (list_drivenames.Count != comboBoxDrives.Items.Count)
                 {
@@ -468,9 +480,11 @@ namespace DynamicDevices.DiskWriter
                     {
                         comboBoxDrives.Items.Add(item);
                     }
+                    comboBoxDrives.SelectedIndex = 0;
                 }
-                
+
             }
+            //list of removable drives is not empty and checkbox checked
             else if (checkBoxLock.Checked == true)
             {
                 //check combobox if checked lock and drive name not exists -> clear combobox
@@ -478,15 +492,23 @@ namespace DynamicDevices.DiskWriter
                 {
                     comboBoxDrives.SelectedIndex = -1;
                     comboBoxDrives.Items.Clear();
-                    sdcard_status = false;
+                    sdcardStatus = false;
+                }
+                else if (comboBoxDrives.Items.IndexOf(checkBoxLock.Text) != 0)
+                {
+                    comboBoxDrives.Items.Clear();
+                    comboBoxDrives.Items.Add(checkBoxLock.Text);
+                    comboBoxDrives.SelectedIndex = 0;
+                    sdcardStatus = true;
                 }
                 else
                 {
-                    sdcard_status = true;
+                    sdcardStatus = true;
                 }
 
             }
 
+            /*
             foreach (var drive in DriveInfo.GetDrives())
             {
                 // Only display removable drives
@@ -503,7 +525,7 @@ namespace DynamicDevices.DiskWriter
                 }
                 
             }
-
+            */
 #if false
             //import the System.Management namespace at the top in your "using" statement.
             var searcher = new ManagementObjectSearcher(
@@ -515,7 +537,7 @@ namespace DynamicDevices.DiskWriter
                     Console.WriteLine(p.Name + " = " + p.Value);
             }
 #endif
-
+            /*
             if (comboBoxDrives.Items.Count > 0)
             {
                 comboBoxDrives.SelectedIndex = 0;
@@ -525,7 +547,7 @@ namespace DynamicDevices.DiskWriter
             {
                 checkBoxLock.Enabled = false;
             }
-            //comboBoxDrives.Enabled = save_cbstate;
+            */
         }
 
         /// <summary>
@@ -565,6 +587,7 @@ namespace DynamicDevices.DiskWriter
             buttonChooseFile.Enabled = false;
             groupBoxCompression.Enabled = false;
             groupBoxTruncation.Enabled = false;
+            checkBoxLock.Enabled = !running;
         }
 
         /// <summary>
@@ -572,18 +595,24 @@ namespace DynamicDevices.DiskWriter
         /// </summary>
         private void EnableButtons()
         {
-            buttonRead.Enabled = true;
-            buttonWrite.Enabled = true;
-            buttonEraseMBR.Enabled = true;
+            if (checkBoxLock.Checked == false)
+            {
+                buttonRead.Enabled = true;
+                //buttonWrite.Enabled = true;
+                buttonEraseMBR.Enabled = true;
+                
+             
+                comboBoxDrives.Enabled = true;
+            
+                textBoxFileName.Enabled = true;
+                buttonChooseFile.Enabled = true;
+                groupBoxCompression.Enabled = true;
+                groupBoxTruncation.Enabled = true;
+                checkBoxLock.Enabled = true;
+            }
             buttonExit.Enabled = true;
             buttonCancel.Enabled = false;
-            if (checkBoxLock.Checked==false) { 
-                comboBoxDrives.Enabled = true;
-            }
-            textBoxFileName.Enabled = true;
-            buttonChooseFile.Enabled = true;
-            groupBoxCompression.Enabled = true;
-            groupBoxTruncation.Enabled = true;
+            buttonWrite.Enabled = true;
         }
 
         #endregion
@@ -623,17 +652,28 @@ namespace DynamicDevices.DiskWriter
             CheckBox lockBox = (CheckBox)sender;
             if (lockBox.Checked)
             {
-                checkBoxLock.Text = comboBoxDrives.SelectedItem.ToString();
-                comboBoxDrives.Enabled = false;
-                sdcard_status = true;
-                dispatcherTimer.Start();
+                if (comboBoxDrives.Items.Count>0)
+                {
+                    checkBoxLock.Text = comboBoxDrives.SelectedItem.ToString();
+                    comboBoxDrives.Enabled = false;
+                    sdcardStatus = true;
+                    DisableButtons(false);
+                    buttonWrite.Enabled = true;
+                }
+                else
+                {
+                    lockBox.Checked = false;
+                    
+                }
+                //dispatcherTimer.Start();
             }
             else
             {
                 checkBoxLock.Text = "";
                 comboBoxDrives.Enabled = true;
-                sdcard_status = false;
-                dispatcherTimer.Stop();
+                sdcardStatus = false;
+                //dispatcherTimer.Stop();
+                EnableButtons();
             }
         }
 
@@ -651,5 +691,16 @@ namespace DynamicDevices.DiskWriter
         {
 
         }
+
+        private void labelFileName_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void menuStripMain_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
+        }
+
     }
 }

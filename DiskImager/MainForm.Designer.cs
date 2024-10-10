@@ -71,6 +71,7 @@
             this.comboBoxDrives.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxDrives.ForeColor = System.Drawing.SystemColors.MenuText;
             this.comboBoxDrives.FormattingEnabled = true;
+            this.comboBoxDrives.ItemHeight = 13;
             this.comboBoxDrives.Location = new System.Drawing.Point(107, 64);
             this.comboBoxDrives.Name = "comboBoxDrives";
             this.comboBoxDrives.Size = new System.Drawing.Size(55, 21);
@@ -79,15 +80,16 @@
             // 
             // textBoxFileName
             // 
-            this.textBoxFileName.Location = new System.Drawing.Point(74, 31);
+            this.textBoxFileName.Location = new System.Drawing.Point(74, 1);
+            this.textBoxFileName.Multiline = true;
             this.textBoxFileName.Name = "textBoxFileName";
-            this.textBoxFileName.Size = new System.Drawing.Size(159, 20);
+            this.textBoxFileName.Size = new System.Drawing.Size(223, 57);
             this.textBoxFileName.TabIndex = 1;
             this.textBoxFileName.TextChanged += new System.EventHandler(this.TextBoxFileNameTextChanged);
             // 
             // buttonRead
             // 
-            this.buttonRead.Location = new System.Drawing.Point(15, 96);
+            this.buttonRead.Location = new System.Drawing.Point(15, 193);
             this.buttonRead.Name = "buttonRead";
             this.buttonRead.Size = new System.Drawing.Size(53, 23);
             this.buttonRead.TabIndex = 2;
@@ -97,7 +99,7 @@
             // 
             // buttonWrite
             // 
-            this.buttonWrite.Location = new System.Drawing.Point(74, 96);
+            this.buttonWrite.Location = new System.Drawing.Point(74, 193);
             this.buttonWrite.Name = "buttonWrite";
             this.buttonWrite.Size = new System.Drawing.Size(54, 23);
             this.buttonWrite.TabIndex = 3;
@@ -107,7 +109,7 @@
             // 
             // buttonExit
             // 
-            this.buttonExit.Location = new System.Drawing.Point(270, 96);
+            this.buttonExit.Location = new System.Drawing.Point(270, 193);
             this.buttonExit.Name = "buttonExit";
             this.buttonExit.Size = new System.Drawing.Size(63, 23);
             this.buttonExit.TabIndex = 4;
@@ -117,9 +119,9 @@
             // 
             // buttonChooseFile
             // 
-            this.buttonChooseFile.Location = new System.Drawing.Point(239, 30);
+            this.buttonChooseFile.Location = new System.Drawing.Point(303, 1);
             this.buttonChooseFile.Name = "buttonChooseFile";
-            this.buttonChooseFile.Size = new System.Drawing.Size(25, 20);
+            this.buttonChooseFile.Size = new System.Drawing.Size(43, 57);
             this.buttonChooseFile.TabIndex = 5;
             this.buttonChooseFile.Text = "...";
             this.buttonChooseFile.UseVisualStyleBackColor = true;
@@ -129,9 +131,9 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 170);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 226);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(345, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(385, 22);
             this.statusStrip1.TabIndex = 6;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -150,11 +152,12 @@
             // labelFileName
             // 
             this.labelFileName.AutoSize = true;
-            this.labelFileName.Location = new System.Drawing.Point(12, 34);
+            this.labelFileName.Location = new System.Drawing.Point(12, 25);
             this.labelFileName.Name = "labelFileName";
             this.labelFileName.Size = new System.Drawing.Size(54, 13);
             this.labelFileName.TabIndex = 7;
             this.labelFileName.Text = "File Name";
+            this.labelFileName.Click += new System.EventHandler(this.labelFileName_Click);
             // 
             // labelDriveTitle
             // 
@@ -167,16 +170,16 @@
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(12, 125);
+            this.progressBar1.Location = new System.Drawing.Point(12, 110);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(321, 28);
+            this.progressBar1.Size = new System.Drawing.Size(334, 28);
             this.progressBar1.TabIndex = 9;
             this.progressBar1.Click += new System.EventHandler(this.progressBar1_Click);
             // 
             // buttonCancel
             // 
             this.buttonCancel.Enabled = false;
-            this.buttonCancel.Location = new System.Drawing.Point(216, 96);
+            this.buttonCancel.Location = new System.Drawing.Point(216, 193);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(48, 23);
             this.buttonCancel.TabIndex = 10;
@@ -249,9 +252,11 @@
             this.optionsToolStripMenuItem});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
             this.menuStripMain.Name = "menuStripMain";
-            this.menuStripMain.Size = new System.Drawing.Size(345, 24);
+            this.menuStripMain.Size = new System.Drawing.Size(674, 24);
             this.menuStripMain.TabIndex = 12;
             this.menuStripMain.Text = "menuStrip1";
+            this.menuStripMain.Visible = false;
+            this.menuStripMain.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStripMain_ItemClicked);
             // 
             // optionsToolStripMenuItem
             // 
@@ -336,7 +341,7 @@
             // 
             // buttonEraseMBR
             // 
-            this.buttonEraseMBR.Location = new System.Drawing.Point(134, 96);
+            this.buttonEraseMBR.Location = new System.Drawing.Point(134, 193);
             this.buttonEraseMBR.Name = "buttonEraseMBR";
             this.buttonEraseMBR.Size = new System.Drawing.Size(76, 23);
             this.buttonEraseMBR.TabIndex = 15;
@@ -359,7 +364,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(345, 192);
+            this.ClientSize = new System.Drawing.Size(385, 248);
             this.Controls.Add(this.checkBoxLock);
             this.Controls.Add(this.buttonEraseMBR);
             this.Controls.Add(this.Advanced);
