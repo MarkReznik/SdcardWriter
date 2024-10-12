@@ -58,6 +58,8 @@
             this.textBoxStart = new System.Windows.Forms.TextBox();
             this.buttonEraseMBR = new System.Windows.Forms.Button();
             this.checkBoxLock = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.labelSdStatus = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.groupBoxCompression.SuspendLayout();
             this.menuStripMain.SuspendLayout();
@@ -83,7 +85,7 @@
             this.textBoxFileName.Location = new System.Drawing.Point(74, 1);
             this.textBoxFileName.Multiline = true;
             this.textBoxFileName.Name = "textBoxFileName";
-            this.textBoxFileName.Size = new System.Drawing.Size(223, 57);
+            this.textBoxFileName.Size = new System.Drawing.Size(190, 57);
             this.textBoxFileName.TabIndex = 1;
             this.textBoxFileName.TextChanged += new System.EventHandler(this.TextBoxFileNameTextChanged);
             // 
@@ -101,7 +103,7 @@
             // 
             this.buttonWrite.Location = new System.Drawing.Point(74, 193);
             this.buttonWrite.Name = "buttonWrite";
-            this.buttonWrite.Size = new System.Drawing.Size(54, 23);
+            this.buttonWrite.Size = new System.Drawing.Size(85, 23);
             this.buttonWrite.TabIndex = 3;
             this.buttonWrite.Text = "Write";
             this.buttonWrite.UseVisualStyleBackColor = true;
@@ -109,7 +111,7 @@
             // 
             // buttonExit
             // 
-            this.buttonExit.Location = new System.Drawing.Point(270, 193);
+            this.buttonExit.Location = new System.Drawing.Point(231, 193);
             this.buttonExit.Name = "buttonExit";
             this.buttonExit.Size = new System.Drawing.Size(63, 23);
             this.buttonExit.TabIndex = 4;
@@ -119,9 +121,9 @@
             // 
             // buttonChooseFile
             // 
-            this.buttonChooseFile.Location = new System.Drawing.Point(303, 1);
+            this.buttonChooseFile.Location = new System.Drawing.Point(270, 12);
             this.buttonChooseFile.Name = "buttonChooseFile";
-            this.buttonChooseFile.Size = new System.Drawing.Size(43, 57);
+            this.buttonChooseFile.Size = new System.Drawing.Size(24, 33);
             this.buttonChooseFile.TabIndex = 5;
             this.buttonChooseFile.Text = "...";
             this.buttonChooseFile.UseVisualStyleBackColor = true;
@@ -131,16 +133,17 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 226);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 222);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(385, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(383, 22);
             this.statusStrip1.TabIndex = 6;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel1
             // 
+            this.toolStripStatusLabel1.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(117, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
             // saveFileDialog1
@@ -172,14 +175,14 @@
             // 
             this.progressBar1.Location = new System.Drawing.Point(12, 110);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(334, 28);
+            this.progressBar1.Size = new System.Drawing.Size(285, 28);
             this.progressBar1.TabIndex = 9;
             this.progressBar1.Click += new System.EventHandler(this.progressBar1_Click);
             // 
             // buttonCancel
             // 
             this.buttonCancel.Enabled = false;
-            this.buttonCancel.Location = new System.Drawing.Point(216, 193);
+            this.buttonCancel.Location = new System.Drawing.Point(172, 193);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(48, 23);
             this.buttonCancel.TabIndex = 10;
@@ -341,7 +344,7 @@
             // 
             // buttonEraseMBR
             // 
-            this.buttonEraseMBR.Location = new System.Drawing.Point(134, 193);
+            this.buttonEraseMBR.Location = new System.Drawing.Point(387, 205);
             this.buttonEraseMBR.Name = "buttonEraseMBR";
             this.buttonEraseMBR.Size = new System.Drawing.Size(76, 23);
             this.buttonEraseMBR.TabIndex = 15;
@@ -360,11 +363,27 @@
             this.checkBoxLock.UseVisualStyleBackColor = true;
             this.checkBoxLock.CheckedChanged += new System.EventHandler(this.checkBoxLock_CheckedChanged);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(181, 86);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(0, 13);
+            this.label1.TabIndex = 8;
+            // 
+            // labelSdStatus
+            // 
+            this.labelSdStatus.AutoSize = true;
+            this.labelSdStatus.Location = new System.Drawing.Point(12, 156);
+            this.labelSdStatus.Name = "labelSdStatus";
+            this.labelSdStatus.Size = new System.Drawing.Size(0, 13);
+            this.labelSdStatus.TabIndex = 8;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(385, 248);
+            this.ClientSize = new System.Drawing.Size(383, 244);
             this.Controls.Add(this.checkBoxLock);
             this.Controls.Add(this.buttonEraseMBR);
             this.Controls.Add(this.Advanced);
@@ -372,6 +391,8 @@
             this.Controls.Add(this.groupBoxCompression);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.progressBar1);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.labelSdStatus);
             this.Controls.Add(this.labelDriveTitle);
             this.Controls.Add(this.labelFileName);
             this.Controls.Add(this.statusStrip1);
@@ -437,6 +458,8 @@
         private System.Windows.Forms.TextBox textBoxStart;
         private System.Windows.Forms.Button buttonEraseMBR;
         private System.Windows.Forms.CheckBox checkBoxLock;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelSdStatus;
     }
 }
 

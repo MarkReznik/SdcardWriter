@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using System.Management;
 using System.Windows.Threading;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace DynamicDevices.DiskWriter
 {
@@ -22,10 +23,31 @@ namespace DynamicDevices.DiskWriter
         private EnumCompressionType _eCompType;
 
         #endregion
-
+        enum SdStates
+        {
+            INIT=0,
+            WAIT_INSERT,
+            INSERTED,
+            NOT_EMPTY,
+            WAIT_WRITE,
+            WRITING,
+            WRITING_DONE_PASS,
+            WRITING_DONE_FAIL,
+            WAIT_REMOVE,
+            REMOVED
+        }
+        
         DispatcherTimer dispatcherTimer = null;
-        bool sdcardStatus=false;
+        const int TIMER_EVENT_SEC = 1;
+        SdStates sdcardStatus = SdStates.INIT;
+        
+        bool waitAutoWrite=false;
+        
+        int waitAutoWriteSeconds = 0;
+        const int WAIT_FOR_WRITE_SEC = 5;
 
+        string textCheckBoxLock = "Check to lock drive letter";
+        
         #region Constructor
 
         public MainForm()
@@ -34,11 +56,11 @@ namespace DynamicDevices.DiskWriter
 
             dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += dispatcherTimer_Tick;
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
-            //dispatcherTimer.Start();
+            dispatcherTimer.Interval = new TimeSpan(0, 0, TIMER_EVENT_SEC);
+            dispatcherTimer.Start();
             
             checkBoxLock.Checked = false;
-            checkBoxLock.Text = "";
+            checkBoxLock.Text = textCheckBoxLock;
             checkBoxUseMBR.Checked = true;
 
             MessageBoxEx.Owner = this.Handle;
@@ -109,8 +131,65 @@ namespace DynamicDevices.DiskWriter
         #endregion
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
+            if (sdcardStatus == SdStates.WRITING_DONE_PASS)
+            {
+                sdcardStatus= SdStates.WAIT_REMOVE;
+                labelSdStatus.ForeColor = Color.Black;
+                labelSdStatus.Text = "Remove SDCARD";
+                if (checkBoxLock.Checked)
+                {
+                    waitAutoWrite = true;
+                }
+            }
             // code goes here
             DisplayAllDrivesToolStripMenuItemCheckedChanged(null, null);
+            /*
+            if (sdcardStatus == SdStates.INIT)
+            {
+                labelSdStatus.ForeColor = Color.Black;
+                labelSdStatus.Text = "Insert NEW SDCARD";
+            }
+            else
+            */
+            if ((sdcardStatus == SdStates.REMOVED))//|| (sdcardStatus == SdStates.INIT))
+            {
+                sdcardStatus = SdStates.WAIT_INSERT;
+                labelSdStatus.ForeColor = Color.Black;
+                labelSdStatus.Text = "Insert NEW SDCARD";
+            }
+            else if (sdcardStatus == SdStates.INSERTED)
+            {
+                
+                //sdcardStatus = SdStates.WAIT_INSERT;
+                labelSdStatus.ForeColor = Color.Black;
+                labelSdStatus.Text = "SDCARD IS READY";
+                if ((checkBoxLock.Checked)&&(!buttonWrite.Enabled))
+                {
+                    if (waitAutoWrite) {
+                        waitAutoWriteSeconds++;
+                        if (waitAutoWriteSeconds > WAIT_FOR_WRITE_SEC)
+                        {
+                            waitAutoWrite=false;
+                            waitAutoWriteSeconds = 0;
+                            ButtonWriteClick(null,null);  
+                        }
+                        else
+                        {
+                            labelSdStatus.Text += ". START WRITING AFTER " + (WAIT_FOR_WRITE_SEC - waitAutoWriteSeconds).ToString()+" sec";
+                        }
+                    }
+                    
+                }
+                
+            }
+            else if (sdcardStatus == SdStates.NOT_EMPTY)
+            {
+
+                sdcardStatus = SdStates.WAIT_REMOVE;
+                labelSdStatus.ForeColor = Color.Red;
+                labelSdStatus.Text = "SDCARD IS NOT EMPTY. Remove and Insert NEW SDCARD";
+            }
+
         }
         public override sealed string Text
         {
@@ -251,6 +330,10 @@ namespace DynamicDevices.DiskWriter
                 return;
             }
 
+            sdcardStatus = SdStates.WRITING;
+            labelSdStatus.ForeColor = Color.Black;
+            labelSdStatus.Text = "WRITING";
+
             var success = false;
             try
             {
@@ -263,9 +346,21 @@ namespace DynamicDevices.DiskWriter
             }
 
             if (!success && !_disk.IsCancelling)
+            {
+                labelSdStatus.Text = "SDCARD WRITE FAIL. REWRITE or REPLACE SD.";
+                labelSdStatus.ForeColor = Color.Red;
+                sdcardStatus = SdStates.WRITING_DONE_FAIL;
                 MessageBoxEx.Show("Problem writing to disk. Is it write-protected?", "Write Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-            EnableButtons();
+                EnableButtons();
+            }
+            else
+            {
+                labelSdStatus.Text = "SDCARD WRITE DONE. INSERT NEW SDCARD.";
+                labelSdStatus.ForeColor = Color.Green;
+                sdcardStatus = SdStates.WRITING_DONE_PASS;
+                
+            }
+            
         }
 
         private void ButtonEraseMBRClick(object sender, EventArgs e)
@@ -451,6 +546,27 @@ namespace DynamicDevices.DiskWriter
                     if (drive.DriveType == DriveType.Removable)
                     {
                         list_drivenames.Add(drive.Name.TrimEnd(new[] { '\\' }));
+                        long driveFreeSpace = drive.AvailableFreeSpace;
+                        long driveTotalSize = drive.TotalSize;
+                        long spaceDiff = (driveTotalSize - driveFreeSpace);
+                        if (spaceDiff > 0 ) {
+                            //if free space different from total then check if only System Folder used
+                            string[] allfiles = Directory.GetFiles(list_drivenames[list_drivenames.Count-1], "*.*", SearchOption.AllDirectories);
+                            bool isNotSystemFolder = false;
+                            foreach (string file in allfiles)
+                            {
+                                if (file.Contains("System Volume Information") == false)
+                                {
+                                    isNotSystemFolder=true;
+                                    break;
+                                }
+                            }
+                            //if (sdcardStatus == SdStates.WAIT_INSERT)
+                            if ((isNotSystemFolder == true)&&(sdcardStatus!=SdStates.WAIT_REMOVE))
+                            {
+                                sdcardStatus = SdStates.NOT_EMPTY;
+                            }
+                        }
                     }
                 }
 
@@ -460,7 +576,10 @@ namespace DynamicDevices.DiskWriter
             {
                 comboBoxDrives.SelectedIndex = -1;
                 comboBoxDrives.Items.Clear();
-
+                if (sdcardStatus == SdStates.WAIT_REMOVE)
+                {
+                    sdcardStatus = SdStates.REMOVED;
+                }
                 if (dispatcherTimer.IsEnabled == false)
                 {
                     dispatcherTimer.Start();
@@ -481,6 +600,10 @@ namespace DynamicDevices.DiskWriter
                         comboBoxDrives.Items.Add(item);
                     }
                     comboBoxDrives.SelectedIndex = 0;
+                    if ((sdcardStatus == SdStates.WAIT_INSERT) || (sdcardStatus == SdStates.INIT))
+                    {
+                        sdcardStatus = SdStates.INSERTED;
+                    }
                 }
 
             }
@@ -492,18 +615,28 @@ namespace DynamicDevices.DiskWriter
                 {
                     comboBoxDrives.SelectedIndex = -1;
                     comboBoxDrives.Items.Clear();
-                    sdcardStatus = false;
+                    if (sdcardStatus == SdStates.WAIT_REMOVE)
+                    {
+                        sdcardStatus = SdStates.REMOVED;
+                    }
+                    
                 }
                 else if (comboBoxDrives.Items.IndexOf(checkBoxLock.Text) != 0)
                 {
                     comboBoxDrives.Items.Clear();
                     comboBoxDrives.Items.Add(checkBoxLock.Text);
                     comboBoxDrives.SelectedIndex = 0;
-                    sdcardStatus = true;
+                    if ((sdcardStatus == SdStates.WAIT_INSERT)|| (sdcardStatus == SdStates.INIT))
+                    {
+                        sdcardStatus = SdStates.INSERTED;
+                    }
                 }
                 else
                 {
-                    sdcardStatus = true;
+                    if ((sdcardStatus == SdStates.WAIT_INSERT) || (sdcardStatus == SdStates.INIT))
+                    {
+                        sdcardStatus = SdStates.INSERTED;
+                    }
                 }
 
             }
@@ -652,16 +785,23 @@ namespace DynamicDevices.DiskWriter
             CheckBox lockBox = (CheckBox)sender;
             if (lockBox.Checked)
             {
-                if (comboBoxDrives.Items.Count>0)
+                if ((comboBoxDrives.Items.Count>0) && (sdcardStatus == SdStates.INSERTED))
                 {
                     checkBoxLock.Text = comboBoxDrives.SelectedItem.ToString();
                     comboBoxDrives.Enabled = false;
-                    sdcardStatus = true;
+                    sdcardStatus = SdStates.WAIT_WRITE;
+                    labelSdStatus.ForeColor = Color.Black;
+                    labelSdStatus.Text = "Press AutoWrite button";
                     DisableButtons(false);
                     buttonWrite.Enabled = true;
+                    buttonWrite.Text = "AutoWrite";
                 }
                 else
                 {
+                    if (sdcardStatus == SdStates.NOT_EMPTY)
+                    {
+
+                    }
                     lockBox.Checked = false;
                     
                 }
@@ -669,11 +809,13 @@ namespace DynamicDevices.DiskWriter
             }
             else
             {
-                checkBoxLock.Text = "";
-                comboBoxDrives.Enabled = true;
-                sdcardStatus = false;
+                checkBoxLock.Text = textCheckBoxLock;
+                sdcardStatus = SdStates.INIT;
+                labelSdStatus.ForeColor = Color.Black;  
+                labelSdStatus.Text = "Manual MODE";
                 //dispatcherTimer.Stop();
                 EnableButtons();
+                buttonWrite.Text = "Write";
             }
         }
 
