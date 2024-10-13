@@ -9,6 +9,7 @@ using System.Management;
 using System.Windows.Threading;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Deployment.Application;
 
 namespace DynamicDevices.DiskWriter
 {
@@ -71,8 +72,10 @@ namespace DynamicDevices.DiskWriter
             saveFileDialog1.Filter = @"Image Files (*.img,*.bin,*.sdcard)|*.img;*.bin;*.sdcard|Compressed Files (*.zip,*.gz,*tgz)|*.zip;*.gz;*.tgz|All files (*.*)|*.*";
 
             // Set version into title
-            var version = Assembly.GetEntryAssembly().GetName().Version;
+            //var version = Assembly.GetEntryAssembly().GetName().Version;
+            string version = Application.ProductVersion;
             Text += @" v" + version;
+            
 
             // Set app icon (not working on Mono/Linux)
             if (Environment.OSVersion.Platform != PlatformID.Unix)
@@ -129,6 +132,8 @@ namespace DynamicDevices.DiskWriter
         }
 
         #endregion
+
+
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             if (sdcardStatus == SdStates.WRITING_DONE_PASS)
