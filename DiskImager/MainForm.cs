@@ -93,7 +93,9 @@ namespace DynamicDevices.DiskWriter
             {
                 var file = (string)key.GetValue("FileName", "");
                 if (File.Exists(file))
-                    textBoxFileName.Text = file;
+                {
+                    //textBoxFileName.Text = file;
+                }
 
                 var drive = (string)key.GetValue("Drive", "");
                 if (string.IsNullOrEmpty(drive))
@@ -556,16 +558,26 @@ namespace DynamicDevices.DiskWriter
                         long spaceDiff = (driveTotalSize - driveFreeSpace);
                         if (spaceDiff > 0 ) {
                             //if free space different from total then check if only System Folder used
-                            string[] allfiles = Directory.GetFiles(list_drivenames[list_drivenames.Count-1], "*.*", SearchOption.AllDirectories);
                             bool isNotSystemFolder = false;
-                            foreach (string file in allfiles)
+                            try
                             {
-                                if (file.Contains("System Volume Information") == false)
+                                string[] allfiles = Directory.GetFiles(list_drivenames[list_drivenames.Count - 1], "*.*", SearchOption.AllDirectories);
+                                foreach (string file in allfiles)
                                 {
-                                    isNotSystemFolder=true;
-                                    break;
+                                    if (file.Contains("System Volume Information") == false)
+                                    {
+                                        isNotSystemFolder = true;
+                                        break;
+                                    }
                                 }
                             }
+                            catch (Exception)
+                            {
+
+                                //throw;
+                            }
+                            
+                            
                             //if (sdcardStatus == SdStates.WAIT_INSERT)
                             if ((isNotSystemFolder == true)&&(sdcardStatus!=SdStates.WAIT_REMOVE))
                             {
@@ -584,6 +596,10 @@ namespace DynamicDevices.DiskWriter
                 if (sdcardStatus == SdStates.WAIT_REMOVE)
                 {
                     sdcardStatus = SdStates.REMOVED;
+                }
+                else if (sdcardStatus == SdStates.INIT)
+                {
+                    labelSdStatus.Text = "INSERT NEW SDCARD";
                 }
                 if (dispatcherTimer.IsEnabled == false)
                 {
