@@ -532,6 +532,11 @@ namespace DynamicDevices.DiskWriter
                     DisableButtons(false);
             }
 
+        struct MyDriveType
+        {
+            public string drivename;
+            public bool isNotEmpty;
+        }
         /// <summary>
         /// Load in the drives
         /// </summary>
@@ -544,7 +549,8 @@ namespace DynamicDevices.DiskWriter
                 return;
             }
             //fill array of removable media drive names
-            List<string> list_drivenames = new List<string>();
+            Dictionary<string,bool> list_drivenames = new Dictionary<string, bool>();
+         
             foreach (var drive in DriveInfo.GetDrives())
             {
                 // Only display removable drives
@@ -552,7 +558,9 @@ namespace DynamicDevices.DiskWriter
                 {
                     if (drive.DriveType == DriveType.Removable)
                     {
-                        list_drivenames.Add(drive.Name.TrimEnd(new[] { '\\' }));
+                        MyDriveType myDrive = new MyDriveType();
+                        myDrive.drivename = drive.Name.TrimEnd(new[] { '\\' });
+                        myDrive.isNotEmpty = false;  
                         long driveFreeSpace = drive.AvailableFreeSpace;
                         long driveTotalSize = drive.TotalSize;
                         long spaceDiff = (driveTotalSize - driveFreeSpace);
@@ -561,7 +569,7 @@ namespace DynamicDevices.DiskWriter
                             bool isNotSystemFolder = false;
                             try
                             {
-                                string[] allfiles = Directory.GetFiles(list_drivenames[list_drivenames.Count - 1], "*.*", SearchOption.AllDirectories);
+                                string[] allfiles = Directory.GetFiles(myDrive.drivename, "*.*", SearchOption.AllDirectories);
                                 foreach (string file in allfiles)
                                 {
                                     if (file.Contains("System Volume Information") == false)
@@ -576,18 +584,21 @@ namespace DynamicDevices.DiskWriter
 
                                 //throw;
                             }
-                            
-                            
+
+
                             //if (sdcardStatus == SdStates.WAIT_INSERT)
-                            if ((isNotSystemFolder == true)&&(sdcardStatus!=SdStates.WAIT_REMOVE))
+                            if ((isNotSystemFolder == true) && (sdcardStatus != SdStates.WAIT_REMOVE))
                             {
-                                sdcardStatus = SdStates.NOT_EMPTY;
-                            }
+                                //sdcardStatus = SdStates.NOT_EMPTY;
+                                myDrive.isNotEmpty = true;
+                            }                 
                         }
+                        list_drivenames.Add(myDrive.drivename,myDrive.isNotEmpty);
                     }
                 }
 
             }
+            bool cbSelectedIsNotEmpty = true;
             //list of removable drives is empty
             if (list_drivenames.Count == 0)
             {
@@ -613,26 +624,46 @@ namespace DynamicDevices.DiskWriter
             //list of removable drives is not empty and checkbox unchecked
             else if (checkBoxLock.Checked == false)
             {
+                
+                
                 //Update combobox if different count and not check lock
                 if (list_drivenames.Count != comboBoxDrives.Items.Count)
                 {
+                    comboBoxDrives.SelectedIndex = -1;
+                    comboBoxDrives.Items.Clear();
                     foreach (var item in list_drivenames)
                     {
-                        comboBoxDrives.Items.Add(item);
+                        comboBoxDrives.Items.Add(item.Key);
                     }
                     comboBoxDrives.SelectedIndex = 0;
-                    if ((sdcardStatus == SdStates.WAIT_INSERT) || (sdcardStatus == SdStates.INIT))
+                }
+                list_drivenames.TryGetValue(comboBoxDrives.SelectedItem.ToString(), out cbSelectedIsNotEmpty);
+                if ((sdcardStatus == SdStates.WAIT_INSERT) || (sdcardStatus == SdStates.INIT))
+                {
+                    if (cbSelectedIsNotEmpty == false)
                     {
                         sdcardStatus = SdStates.INSERTED;
                     }
+                    else
+                    {
+                        sdcardStatus = SdStates.NOT_EMPTY;
+                    }
                 }
-
+                else if (sdcardStatus == SdStates.INSERTED)
+                {
+                    if (cbSelectedIsNotEmpty == true)
+                    {
+                        sdcardStatus = SdStates.NOT_EMPTY;
+                    }
+                }
             }
             //list of removable drives is not empty and checkbox checked
             else if (checkBoxLock.Checked == true)
             {
+                list_drivenames.TryGetValue(checkBoxLock.Text, out cbSelectedIsNotEmpty);
+
                 //check combobox if checked lock and drive name not exists -> clear combobox
-                if (list_drivenames.Contains(checkBoxLock.Text) == false)
+                if (list_drivenames.ContainsKey(checkBoxLock.Text) == false)
                 {
                     comboBoxDrives.SelectedIndex = -1;
                     comboBoxDrives.Items.Clear();
@@ -649,14 +680,28 @@ namespace DynamicDevices.DiskWriter
                     comboBoxDrives.SelectedIndex = 0;
                     if ((sdcardStatus == SdStates.WAIT_INSERT)|| (sdcardStatus == SdStates.INIT))
                     {
-                        sdcardStatus = SdStates.INSERTED;
+                        if (cbSelectedIsNotEmpty == false)
+                        {
+                            sdcardStatus = SdStates.INSERTED;
+                        }
+                        else
+                        {
+                            sdcardStatus = SdStates.NOT_EMPTY;
+                        }
                     }
                 }
                 else
                 {
                     if ((sdcardStatus == SdStates.WAIT_INSERT) || (sdcardStatus == SdStates.INIT))
                     {
-                        sdcardStatus = SdStates.INSERTED;
+                        if (cbSelectedIsNotEmpty == false)
+                        {
+                            sdcardStatus = SdStates.INSERTED;
+                        }
+                        else
+                        {
+                            sdcardStatus = SdStates.NOT_EMPTY;
+                        }
                     }
                 }
 
@@ -808,6 +853,10 @@ namespace DynamicDevices.DiskWriter
             {
                 if ((comboBoxDrives.Items.Count>0) && (sdcardStatus == SdStates.INSERTED))
                 {
+                    string drivenamesave= comboBoxDrives.SelectedItem.ToString();
+                    comboBoxDrives.Items.Clear();
+                    comboBoxDrives.Items.Add(drivenamesave);
+                    comboBoxDrives.SelectedIndex = 0;
                     checkBoxLock.Text = comboBoxDrives.SelectedItem.ToString();
                     comboBoxDrives.Enabled = false;
                     sdcardStatus = SdStates.WAIT_WRITE;
@@ -865,5 +914,13 @@ namespace DynamicDevices.DiskWriter
 
         }
 
+        private void comboBoxDrives_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (checkBoxLock.Checked == false)
+            {
+                sdcardStatus = SdStates.INIT;
+            }
+            
+        }
     }
 }
